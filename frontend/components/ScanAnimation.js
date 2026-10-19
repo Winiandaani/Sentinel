@@ -1,4 +1,4 @@
-export default function ScanAnimation() {
+export default function ScanAnimation({ text = "ANALYZING PIXELS..." }) {
   return (
     <div className="pointer-events-none absolute inset-0 bg-void/40">
       {/* Sweeping line */}
@@ -12,7 +12,7 @@ export default function ScanAnimation() {
 
       {/* Status text */}
       <p className="blink absolute bottom-3 left-1/2 -translate-x-1/2 font-mono text-[10px] tracking-widest text-chrome">
-        ANALYZING PIXELS...
+        {text}
       </p>
     </div>
   );
