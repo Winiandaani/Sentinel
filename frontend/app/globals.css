@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* 1. Sentinel colors: become Tailwind classes like bg-void, text-chrome */
-@theme {
+/* 1. Sentinel colors and fonts: become classes like bg-void, text-chrome, font-display */
+@theme inline {
   --color-void: #0d0e10;
   --color-panel: #16181b;
   --color-steel: #24272b;
@@ -11,16 +11,13 @@
   --color-signal-green: #4ade80;
   --color-signal-amber: #fbbf24;
   --color-signal-red: #f87171;
-}
 
-/* 2. Fonts: become classes font-display, font-mono, font-sans */
-@theme inline {
   --font-display: var(--font-orbitron);
   --font-mono: var(--font-jetbrains);
   --font-sans: var(--font-inter);
 }
 
-/* 3. Page background: off-black with a faint grid + scanlines */
+/* 2. Page background: off-black with a faint grid + scanlines */
 body {
   background-color: var(--color-void);
   color: var(--color-chrome);
@@ -45,7 +42,7 @@ body::after {
   z-index: 50;
 }
 
-/* 4. Robotic effects you can add to anything */
+/* 3. Robotic effects you can add to anything */
 .glow {
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.15),
     inset 0 0 8px rgba(255, 255, 255, 0.05);
@@ -68,7 +65,8 @@ body::after {
 .blink {
   animation: blink 1.2s steps(1) infinite;
 }
-/* 5. Scan line that sweeps up and down */
+
+/* 4. Scan line that sweeps up and down */
 @keyframes scan {
   0% {
     top: 0%;

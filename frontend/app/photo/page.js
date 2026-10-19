@@ -4,31 +4,38 @@ import { useState } from "react";
 import UploadBox from "@/components/UploadBox";
 import ResultCard from "@/components/ResultCard";
 import ScanAnimation from "@/components/ScanAnimation";
-// Fake result until the real AI is connected
-const fakeResult = {
-  verdict: "likely_ai",
-  confidence: 87,
-  evidence: [
-    "No content credentials found",
-    "Camera information missing from metadata",
-    "AI model score: 0.87 (high)",
-  ],
-};
 
 export default function PhotoPage() {
   const [file, setFile] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
-  function handleScan() {
+  async function handleScan() {
     setIsScanning(true);
     setResult(null);
+    setError("");
 
-    // Pretend to scan for 2 seconds
-    setTimeout(() => {
-      setResult(fakeResult);
+    try {
+      // Pack the image into a form, like attaching a file to an email
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Send it to the backend and wait for the reply
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze/photo`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Server error");
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError("SCAN FAILED: could not reach the Sentinel backend. Is it running?");
+    } finally {
       setIsScanning(false);
-    }, 2000);
+    }
   }
 
   return (
@@ -43,16 +50,18 @@ export default function PhotoPage() {
           label="UPLOAD AN IMAGE"
           onFileSelect={(f) => {
             setFile(f);
-            setResult(null); // clear the old result when a new file is chosen
+            setResult(null);
+            setError("");
           }}
         />
 
         {file && (
-  <div className="relative mt-6 inline-block">
-    <img src={URL.createObjectURL(file)} alt="Preview" className="block max-h-80 border border-steel" />
-    {isScanning && <ScanAnimation />}
-  </div>
-)}
+          <div className="relative mt-6 inline-block">
+            <img src={URL.createObjectURL(file)} alt="Preview" className="block max-h-80 border border-steel" />
+            {isScanning && <ScanAnimation />}
+          </div>
+        )}
+
         <button
           onClick={handleScan}
           disabled={!file || isScanning}
@@ -60,6 +69,12 @@ export default function PhotoPage() {
         >
           {isScanning ? <span className="blink">SCANNING...</span> : "INITIATE SCAN"}
         </button>
+
+        {error && (
+          <p className="mt-6 border border-signal-red p-4 font-mono text-xs tracking-widest text-signal-red">
+            {error}
+          </p>
+        )}
 
         {result && <ResultCard result={result} />}
       </div>
