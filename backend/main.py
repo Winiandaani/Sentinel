@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi import HTTPException
-from detectors.photo import check_metadata, check_with_models
+from detectors.photo import check_metadata, check_with_models, check_content_credentials
 app = FastAPI(title="Sentinel API")
 
 # Allow the frontend (port 3000) to talk to this backend
@@ -26,24 +26,30 @@ async def analyze_photo(file: UploadFile = File(...)):
     image_bytes = await file.read()
 
     try:
+        credentials = check_content_credentials(image_bytes, file.content_type)
         metadata = check_metadata(image_bytes)
         scores = check_with_models(image_bytes)
     except Exception:
         raise HTTPException(status_code=400, detail="Could not read this image")
 
-    evidence = metadata["findings"] + [
+    evidence = credentials["findings"] + metadata["findings"] + [
         f"{name} score: {score:.2f} (0 = human, 1 = AI)" for name, score in scores.items()
     ]
 
     lowest = min(scores.values())
     highest = max(scores.values())
 
-    # Layer 1: an AI tool's name in the metadata is strong proof
-    if metadata["signal"] == "ai":
+    # Layer 1: signed content credentials saying AI = strongest proof
+    if credentials["signal"] == "ai":
+        verdict = "likely_ai"
+        confidence = 99
+
+    # Layer 2: an AI tool's name in the metadata
+    elif metadata["signal"] == "ai":
         verdict = "likely_ai"
         confidence = 90
 
-    # Layer 2: both models agree it's AI
+    # Layer 3: both models agree it's AI
     elif lowest >= 0.80:
         verdict = "likely_ai"
         confidence = round(lowest * 100)

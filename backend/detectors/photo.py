@@ -1,4 +1,6 @@
 import io
+import json
+import c2pa
 from PIL import Image, ExifTags
 from transformers import pipeline
 
@@ -76,3 +78,24 @@ def get_ai_score(detector, image):
 def check_with_models(image_bytes):
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     return {name: get_ai_score(det, image) for name, det in detectors.items()}
+def check_content_credentials(image_bytes, mime_type):
+    # Try to read a content credentials "receipt" from the file
+    try:
+        reader = c2pa.Reader(mime_type, io.BytesIO(image_bytes))
+        store = json.loads(reader.json())
+    except Exception:
+        return {"signal": "none", "findings": ["No content credentials found"]}
+
+    # Find which tool created the receipt
+    active = store.get("manifests", {}).get(store.get("active_manifest"), {})
+    tool = active.get("claim_generator") or ""
+    info = active.get("claim_generator_info")
+    if not tool and info:
+        tool = info[0].get("name", "")
+    tool = tool or "unknown tool"
+
+    # The official marker for AI-generated content
+    if "trainedalgorithmicmedia" in json.dumps(store).lower():
+        return {"signal": "ai", "findings": [f"Content credentials say this was made by AI ({tool})"]}
+
+    return {"signal": "none", "findings": [f"Content credentials found from {tool}, no AI marker"]}
