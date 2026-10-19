@@ -5,30 +5,35 @@ import UploadBox from "@/components/UploadBox";
 import ResultCard from "@/components/ResultCard";
 import ScanAnimation from "@/components/ScanAnimation";
 
-// Fake result until the real AI is connected
-const fakeResult = {
-  verdict: "uncertain",
-  confidence: 54,
-  evidence: [
-    "No content credentials found",
-    "Device name missing from video metadata",
-    "12 of 40 frames scored high for AI",
-  ],
-};
-
 export default function VideoPage() {
   const [file, setFile] = useState(null);
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
-  function handleScan() {
+  async function handleScan() {
     setIsScanning(true);
     setResult(null);
+    setError("");
 
-    setTimeout(() => {
-      setResult(fakeResult);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze/video`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Server error");
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError("SCAN FAILED: could not reach the Sentinel backend. Is it running?");
+    } finally {
       setIsScanning(false);
-    }, 3000); // videos take longer, so 3 seconds
+    }
   }
 
   return (
@@ -44,6 +49,7 @@ export default function VideoPage() {
           onFileSelect={(f) => {
             setFile(f);
             setResult(null);
+            setError("");
           }}
         />
 
@@ -61,6 +67,12 @@ export default function VideoPage() {
         >
           {isScanning ? <span className="blink">SCANNING...</span> : "INITIATE SCAN"}
         </button>
+
+        {error && (
+          <p className="mt-6 border border-signal-red p-4 font-mono text-xs tracking-widest text-signal-red">
+            {error}
+          </p>
+        )}
 
         {result && <ResultCard result={result} />}
       </div>

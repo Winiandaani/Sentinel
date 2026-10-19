@@ -7,32 +7,35 @@ import ScanAnimation from "@/components/ScanAnimation";
 
 const MIN_WORDS = 80;
 
-// Fake result until the real AI is connected
-const fakeResult = {
-  verdict: "likely_real",
-  confidence: 72,
-  evidence: [
-    "Sentence lengths vary a lot (human-like)",
-    "Word choice is not very predictable",
-    "AI text model score: 0.28 (low)",
-  ],
-};
-
 export default function TextPage() {
   const [text, setText] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState("");
 
   const canScan = countWords(text) >= MIN_WORDS && !isScanning;
 
-  function handleScan() {
+  async function handleScan() {
     setIsScanning(true);
     setResult(null);
+    setError("");
 
-    setTimeout(() => {
-      setResult(fakeResult);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze/text`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: text }),
+      });
+
+      if (!response.ok) throw new Error("Server error");
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError("SCAN FAILED: could not reach the Sentinel backend. Is it running?");
+    } finally {
       setIsScanning(false);
-    }, 2000);
+    }
   }
 
   return (
@@ -47,6 +50,7 @@ export default function TextPage() {
           onChange={(newText) => {
             setText(newText);
             setResult(null);
+            setError("");
           }}
           minWords={MIN_WORDS}
         />
@@ -61,6 +65,12 @@ export default function TextPage() {
         >
           {isScanning ? <span className="blink">SCANNING...</span> : "INITIATE SCAN"}
         </button>
+
+        {error && (
+          <p className="mt-6 border border-signal-red p-4 font-mono text-xs tracking-widest text-signal-red">
+            {error}
+          </p>
+        )}
 
         {result && <ResultCard result={result} />}
       </div>
