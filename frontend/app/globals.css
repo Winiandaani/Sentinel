@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+/* 1. Sentinel colors: become Tailwind classes like bg-void, text-chrome */
+@theme {
+  --color-void: #0d0e10;
+  --color-panel: #16181b;
+  --color-steel: #24272b;
+  --color-gunmetal: #3a3e44;
+  --color-silver: #9aa0a6;
+  --color-chrome: #e4e6e8;
+  --color-signal-green: #4ade80;
+  --color-signal-amber: #fbbf24;
+  --color-signal-red: #f87171;
+}
+
+/* 2. Fonts: become classes font-display, font-mono, font-sans */
+@theme inline {
+  --font-display: var(--font-orbitron);
+  --font-mono: var(--font-jetbrains);
+  --font-sans: var(--font-inter);
+}
+
+/* 3. Page background: off-black with a faint grid + scanlines */
+body {
+  background-color: var(--color-void);
+  color: var(--color-chrome);
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.015) 0px,
+    rgba(255, 255, 255, 0.015) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  z-index: 50;
+}
+
+/* 4. Robotic effects you can add to anything */
+.glow {
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.15),
+    inset 0 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.text-glow {
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.cut-corner {
+  clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+
+.blink {
+  animation: blink 1.2s steps(1) infinite;
+}
