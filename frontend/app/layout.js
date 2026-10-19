@@ -1,5 +1,6 @@
 import { Orbitron, JetBrains_Mono, Inter } from "next/font/google";
 import "./globals.css";
+import Sidebar from "@/components/Sidebar";
 
 // Load the three fonts from Google Fonts
 const orbitron = Orbitron({ subsets: ["latin"], variable: "--font-orbitron" });
@@ -18,7 +19,8 @@ export default function RootLayout({ children }) {
       <body
         className={`${orbitron.variable} ${jetbrains.variable} ${inter.variable} font-sans antialiased`}
       >
-        {children}
+        <Sidebar />
+<main className="ml-60 min-h-screen">{children}</main>
       </body>
     </html>
   );
