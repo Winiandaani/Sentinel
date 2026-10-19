@@ -20,7 +20,7 @@ export default function RootLayout({ children }) {
         className={`${orbitron.variable} ${jetbrains.variable} ${inter.variable} font-sans antialiased`}
       >
         <Sidebar />
-<main className="ml-60 min-h-screen">{children}</main>
+<main className="min-h-screen pb-24 md:ml-60 md:pb-0">{children}</main>
       </body>
     </html>
   );
