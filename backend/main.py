@@ -1,8 +1,8 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
-# Create the app
+from fastapi import HTTPException
+from detectors.photo import check_metadata, check_with_models
 app = FastAPI(title="Sentinel API")
 
 # Allow the frontend (port 3000) to talk to this backend
@@ -23,15 +23,43 @@ def home():
 # PHOTO: receives an image file
 @app.post("/analyze/photo")
 async def analyze_photo(file: UploadFile = File(...)):
-    return {
-        "verdict": "likely_ai",
-        "confidence": 87,
-        "evidence": [
-            f"Received file: {file.filename}",
-            "Backend connected (fake result for now)",
-        ],
-    }
+    image_bytes = await file.read()
 
+    try:
+        metadata = check_metadata(image_bytes)
+        scores = check_with_models(image_bytes)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Could not read this image")
+
+    evidence = metadata["findings"] + [
+        f"{name} score: {score:.2f} (0 = human, 1 = AI)" for name, score in scores.items()
+    ]
+
+    lowest = min(scores.values())
+    highest = max(scores.values())
+
+    # Layer 1: an AI tool's name in the metadata is strong proof
+    if metadata["signal"] == "ai":
+        verdict = "likely_ai"
+        confidence = 90
+
+    # Layer 2: both models agree it's AI
+    elif lowest >= 0.80:
+        verdict = "likely_ai"
+        confidence = round(lowest * 100)
+
+    # Both models agree it's real
+    elif highest <= 0.20:
+        verdict = "likely_real"
+        confidence = round((1 - highest) * 100)
+
+    # The models disagree, so be honest about it
+    else:
+        verdict = "uncertain"
+        confidence = 50
+        evidence.append("The two models disagree on this image")
+
+    return {"verdict": verdict, "confidence": confidence, "evidence": evidence}
 
 # VIDEO: receives a video file
 @app.post("/analyze/video")
