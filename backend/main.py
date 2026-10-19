@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi import HTTPException
 from detectors.photo import check_metadata, check_with_models, check_content_credentials
+from detectors.video import analyze_video
+
+MAX_VIDEO_BYTES = 100 * 1024 * 1024  # 100 MB
 app = FastAPI(title="Sentinel API")
 
 # Allow the frontend (port 3000) to talk to this backend
@@ -69,15 +72,16 @@ async def analyze_photo(file: UploadFile = File(...)):
 
 # VIDEO: receives a video file
 @app.post("/analyze/video")
-async def analyze_video(file: UploadFile = File(...)):
-    return {
-        "verdict": "uncertain",
-        "confidence": 54,
-        "evidence": [
-            f"Received file: {file.filename}",
-            "Backend connected (fake result for now)",
-        ],
-    }
+async def video_route(file: UploadFile = File(...)):
+    video_bytes = await file.read()
+
+    if len(video_bytes) > MAX_VIDEO_BYTES:
+        raise HTTPException(status_code=400, detail="Video is too big (max 100 MB)")
+
+    try:
+              return analyze_video(video_bytes, file.filename, file.content_type)  
+    except ValueError as problem:
+        raise HTTPException(status_code=400, detail=str(problem))
 
 
 # TEXT: receives text, not a file
