@@ -6,6 +6,7 @@ from detectors.photo import check_metadata, check_with_models, check_content_cre
 from detectors.video import analyze_video
 
 MAX_VIDEO_BYTES = 100 * 1024 * 1024  # 100 MB
+from detectors.text import check_with_text_model, check_writing_style
 app = FastAPI(title="Sentinel API")
 
 # Allow the frontend (port 3000) to talk to this backend
@@ -91,12 +92,30 @@ class TextRequest(BaseModel):
 
 @app.post("/analyze/text")
 def analyze_text(request: TextRequest):
-    word_count = len(request.text.split())
-    return {
-        "verdict": "likely_real",
-        "confidence": 72,
-        "evidence": [
-            f"Received {word_count} words",
-            "Backend connected (fake result for now)",
-        ],
-    }
+    text = request.text.strip()
+    word_count = len(text.split())
+
+    if word_count < 80:
+        raise HTTPException(status_code=400, detail="Text is too short (need at least 80 words)")
+
+    ai_score = check_with_text_model(text)
+
+    evidence = (
+        [f"Words analyzed: {word_count}",
+         f"AI text model score: {ai_score:.2f} (0 = human, 1 = AI)"]
+        + check_writing_style(text)
+    )
+
+    # Text is harder, so we demand a very sure model
+    if ai_score >= 0.90:
+        verdict, confidence = "likely_ai", round(ai_score * 100)
+    elif ai_score <= 0.10:
+        # "No AI signs" is not proof a human wrote it, so cap the confidence
+        verdict, confidence = "no_ai_signs", min(70, round((1 - ai_score) * 100))
+        evidence.append("No clear AI signs found, but casual or edited AI text can still slip through")
+    else:
+        verdict, confidence = "uncertain", 50
+
+    evidence.append("Text detection is less reliable than photo checks. Never use it alone to accuse anyone.")
+
+    return {"verdict": verdict, "confidence": confidence, "evidence": evidence}

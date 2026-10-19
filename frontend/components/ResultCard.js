@@ -3,10 +3,11 @@ const verdicts = {
   likely_ai: { label: "LIKELY AI", color: "text-signal-red", bar: "bg-signal-red", border: "border-signal-red" },
   likely_real: { label: "LIKELY REAL", color: "text-signal-green", bar: "bg-signal-green", border: "border-signal-green" },
   uncertain: { label: "UNCERTAIN", color: "text-signal-amber", bar: "bg-signal-amber", border: "border-signal-amber" },
+  no_ai_signs: { label: "NO CLEAR AI SIGNS", color: "text-signal-green", bar: "bg-signal-green", border: "border-signal-green" },
 };
 
 export default function ResultCard({ result }) {
-  const v = verdicts[result.verdict];
+const v = verdicts[result.verdict] || verdicts.uncertain;
 
   return (
     <div className={`cut-corner mt-8 border-l-4 bg-panel p-6 ${v.border}`}>
