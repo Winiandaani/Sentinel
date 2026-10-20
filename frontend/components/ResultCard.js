@@ -4,26 +4,29 @@ const verdicts = {
   likely_real: { label: "LIKELY REAL", color: "text-signal-green", bar: "bg-signal-green", border: "border-signal-green" },
   uncertain: { label: "UNCERTAIN", color: "text-signal-amber", bar: "bg-signal-amber", border: "border-signal-amber" },
   no_ai_signs: { label: "NO CLEAR AI SIGNS", color: "text-signal-green", bar: "bg-signal-green", border: "border-signal-green" },
+  too_short: { label: "TOO SHORT TO JUDGE", color: "text-silver", bar: "bg-silver", border: "border-silver" },
 };
 
 export default function ResultCard({ result }) {
-const v = verdicts[result.verdict] || verdicts.uncertain;
+  const v = verdicts[result.verdict] || verdicts.uncertain;
 
   return (
     <div className={`cut-corner mt-8 border-l-4 bg-panel p-6 ${v.border}`}>
       <p className="font-mono text-[10px] tracking-widest text-silver">// SCAN RESULT</p>
       <h2 className={`mt-2 font-display text-2xl font-bold tracking-widest ${v.color}`}>{v.label}</h2>
 
-      {/* Confidence bar */}
-      <div className="mt-6">
-        <div className="flex justify-between font-mono text-xs tracking-widest text-silver">
-          <span>CONFIDENCE</span>
-          <span>{result.confidence}%</span>
+      {/* Confidence bar (hidden when there's no confidence) */}
+      {result.confidence != null && (
+        <div className="mt-6">
+          <div className="flex justify-between font-mono text-xs tracking-widest text-silver">
+            <span>CONFIDENCE</span>
+            <span>{result.confidence}%</span>
+          </div>
+          <div className="mt-2 h-2 w-full bg-steel">
+            <div className={`h-2 ${v.bar}`} style={{ width: `${result.confidence}%` }} />
+          </div>
         </div>
-        <div className="mt-2 h-2 w-full bg-steel">
-          <div className={`h-2 ${v.bar}`} style={{ width: `${result.confidence}%` }} />
-        </div>
-      </div>
+      )}
 
       {/* Evidence list */}
       <p className="mt-6 font-mono text-[10px] tracking-widest text-silver">// EVIDENCE</p>

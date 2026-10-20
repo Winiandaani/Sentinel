@@ -4,6 +4,7 @@ import { useState } from "react";
 import UploadBox from "@/components/UploadBox";
 import ResultCard from "@/components/ResultCard";
 import ScanAnimation from "@/components/ScanAnimation";
+import { scan } from "@/lib/api";
 
 export default function PhotoPage() {
   const [file, setFile] = useState(null);
@@ -11,33 +12,22 @@ export default function PhotoPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
-  async function handleScan() {
+    async function handleScan() {
     setIsScanning(true);
     setResult(null);
     setError("");
 
     try {
-      // Pack the image into a form, like attaching a file to an email
       const formData = new FormData();
       formData.append("file", file);
-
-      // Send it to the backend and wait for the reply
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze/photo`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Server error");
-
-      const data = await response.json();
+      const data = await scan("/analyze/photo", { body: formData });
       setResult(data);
     } catch (err) {
-      setError("SCAN FAILED: could not reach the Sentinel backend. Is it running?");
+      setError(`SCAN FAILED: ${err.message}`);
     } finally {
       setIsScanning(false);
     }
   }
-
   return (
     <div className="p-10">
       <p className="font-mono text-xs tracking-widest text-silver">// MODULE 02</p>

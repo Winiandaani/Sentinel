@@ -4,9 +4,21 @@ export function countWords(text) {
   return trimmed === "" ? 0 : trimmed.split(/\s+/).length;
 }
 
-export default function TextInput({ value, onChange, minWords }) {
+export default function TextInput({ value, onChange, minToScan, minWords }) {
   const wordCount = countWords(value);
-  const enough = wordCount >= minWords;
+
+  // Pick the message and color for the counter
+  let message, color;
+  if (wordCount < minToScan) {
+    message = `NEED ${minToScan - wordCount} MORE WORDS`;
+    color = "text-signal-amber";
+  } else if (wordCount < minWords) {
+    message = `SHORT TEXT: RESULT WILL BE A WEAK HINT (${minWords}+ IS BEST)`;
+    color = "text-silver";
+  } else {
+    message = "READY TO SCAN";
+    color = "text-signal-green";
+  }
 
   return (
     <div className="cut-corner border border-steel bg-panel p-4 focus-within:border-chrome">
@@ -19,11 +31,9 @@ export default function TextInput({ value, onChange, minWords }) {
       />
 
       {/* Word counter bar */}
-      <div className="mt-2 flex justify-between border-t border-steel pt-2 font-mono text-[10px] tracking-widest">
+      <div className="mt-2 flex justify-between gap-4 border-t border-steel pt-2 font-mono text-[10px] tracking-widest">
         <span className="text-silver">WORDS: {wordCount}</span>
-        <span className={enough ? "text-signal-green" : "text-signal-amber"}>
-          {enough ? "READY TO SCAN" : `NEED ${minWords - wordCount} MORE WORDS`}
-        </span>
+        <span className={`text-right ${color}`}>{message}</span>
       </div>
     </div>
   );

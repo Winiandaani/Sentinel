@@ -5,7 +5,8 @@ import TextInput, { countWords } from "@/components/TextInput";
 import ResultCard from "@/components/ResultCard";
 import ScanAnimation from "@/components/ScanAnimation";
 
-const MIN_WORDS = 80;
+const MIN_WORDS_TO_SCAN = 10;
+const MIN_WORDS_RELIABLE = 80;
 
 export default function TextPage() {
   const [text, setText] = useState("");
@@ -13,7 +14,7 @@ export default function TextPage() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState("");
 
-  const canScan = countWords(text) >= MIN_WORDS && !isScanning;
+  const canScan = countWords(text) >= MIN_WORDS_TO_SCAN && !isScanning;
 
   async function handleScan() {
     setIsScanning(true);
@@ -52,7 +53,8 @@ export default function TextPage() {
             setResult(null);
             setError("");
           }}
-          minWords={MIN_WORDS}
+          minToScan={MIN_WORDS_TO_SCAN}
+          minWords={MIN_WORDS_RELIABLE}
         />
         {isScanning && <ScanAnimation text="ANALYZING TEXT..." />}
       </div>

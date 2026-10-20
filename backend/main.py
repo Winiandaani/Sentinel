@@ -90,21 +90,33 @@ class TextRequest(BaseModel):
     text: str
 
 
+MIN_WORDS_TO_SCAN = 10
+MIN_WORDS_RELIABLE = 80
+
+
 @app.post("/analyze/text")
 def analyze_text(request: TextRequest):
     text = request.text.strip()
     word_count = len(text.split())
 
-    if word_count < 80:
-        raise HTTPException(status_code=400, detail="Text is too short (need at least 80 words)")
+    if word_count < MIN_WORDS_TO_SCAN:
+        raise HTTPException(status_code=400, detail=f"Please enter at least {MIN_WORDS_TO_SCAN} words")
 
     ai_score = check_with_text_model(text)
+    evidence = [
+        f"Words analyzed: {word_count}",
+        f"AI text model score: {ai_score:.2f} (0 = human, 1 = AI)",
+    ]
 
-    evidence = (
-        [f"Words analyzed: {word_count}",
-         f"AI text model score: {ai_score:.2f} (0 = human, 1 = AI)"]
-        + check_writing_style(text)
-    )
+    # Short text: share the score, but don't give a verdict
+    if word_count < MIN_WORDS_RELIABLE:
+        evidence.append(
+            f"Only {word_count} words. Detection needs about {MIN_WORDS_RELIABLE}+ words "
+            "to be reliable, so treat this score as a weak hint."
+        )
+        return {"verdict": "too_short", "confidence": None, "evidence": evidence}
+
+    evidence += check_writing_style(text)
 
     # Text is harder, so we demand a very sure model
     if ai_score >= 0.90:
