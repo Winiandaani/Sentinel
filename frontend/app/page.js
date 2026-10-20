@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Video, ImageIcon, FileText, ArrowRight } from "lucide-react";
+import RecentScans from "@/components/RecentScans";
 
 // The three detector cards
 const modules = [
@@ -45,9 +46,7 @@ export default function Home() {
       {/* Recent scans (empty for now) */}
       <div className="mt-12">
         <p className="font-mono text-xs tracking-widest text-silver">// RECENT SCANS</p>
-        <div className="mt-3 border border-dashed border-steel p-8 text-center font-mono text-sm text-silver">
-          NO SCANS LOGGED YET
-        </div>
+        <RecentScans />
       </div>
     </div>
   );

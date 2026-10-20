@@ -4,6 +4,8 @@ import { useState } from "react";
 import TextInput, { countWords } from "@/components/TextInput";
 import ResultCard from "@/components/ResultCard";
 import ScanAnimation from "@/components/ScanAnimation";
+import { scan } from "@/lib/api";
+import { saveScan } from "@/lib/history";
 
 const MIN_WORDS_TO_SCAN = 10;
 const MIN_WORDS_RELIABLE = 80;
@@ -16,24 +18,20 @@ export default function TextPage() {
 
   const canScan = countWords(text) >= MIN_WORDS_TO_SCAN && !isScanning;
 
-  async function handleScan() {
+    async function handleScan() {
     setIsScanning(true);
     setResult(null);
     setError("");
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze/text`, {
-        method: "POST",
+      const data = await scan("/analyze/text", {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: text }),
       });
-
-      if (!response.ok) throw new Error("Server error");
-
-      const data = await response.json();
       setResult(data);
+      saveScan({ type: "text", name: `Text (${countWords(text)} words)`, verdict: data.verdict });
     } catch (err) {
-      setError("SCAN FAILED: could not reach the Sentinel backend. Is it running?");
+      setError(`SCAN FAILED: ${err.message}`);
     } finally {
       setIsScanning(false);
     }

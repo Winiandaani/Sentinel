@@ -5,6 +5,7 @@ import UploadBox from "@/components/UploadBox";
 import ResultCard from "@/components/ResultCard";
 import ScanAnimation from "@/components/ScanAnimation";
 import { scan } from "@/lib/api";
+import { saveScan } from "@/lib/history";
 
 export default function PhotoPage() {
   const [file, setFile] = useState(null);
@@ -22,6 +23,7 @@ export default function PhotoPage() {
       formData.append("file", file);
       const data = await scan("/analyze/photo", { body: formData });
       setResult(data);
+      saveScan({ type: "photo", name: file.name, verdict: data.verdict });
     } catch (err) {
       setError(`SCAN FAILED: ${err.message}`);
     } finally {

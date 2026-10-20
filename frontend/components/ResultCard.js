@@ -1,5 +1,5 @@
 // Look and label for each possible verdict
-const verdicts = {
+export const verdicts = {
   likely_ai: { label: "LIKELY AI", color: "text-signal-red", bar: "bg-signal-red", border: "border-signal-red" },
   likely_real: { label: "LIKELY REAL", color: "text-signal-green", bar: "bg-signal-green", border: "border-signal-green" },
   uncertain: { label: "UNCERTAIN", color: "text-signal-amber", bar: "bg-signal-amber", border: "border-signal-amber" },

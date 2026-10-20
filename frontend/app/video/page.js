@@ -19,18 +19,11 @@ export default function VideoPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/analyze/video`, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) throw new Error("Server error");
-
-      const data = await response.json();
+      const data = await scan("/analyze/video", { body: formData });
       setResult(data);
+      saveScan({ type: "video", name: file.name, verdict: data.verdict });
     } catch (err) {
-      setError("SCAN FAILED: could not reach the Sentinel backend. Is it running?");
+      setError(`SCAN FAILED: ${err.message}`);
     } finally {
       setIsScanning(false);
     }
